@@ -16,6 +16,7 @@ tx_freq_max=174
 channel_width=0
 fake_rx_freq=174
 squelch=1
+timeslot_duration=1000
 
 window = Tk()
 window.title(title)
@@ -68,9 +69,10 @@ def loop1():
     global channel_width
     global fake_rx_freq
     global squelch
+    global timeslot_duration
     
     if(com_port_opened==1):
-        while(ser.inWaiting()>0):
+        while(ser.inWaiting()>0):            
             stx_monitor.insert(INSERT,ser.read())
     
     write("AT+DMOSETGROUP=")
@@ -86,10 +88,11 @@ def loop1():
     tx_freq=tx_freq+tx_freq_step
     if tx_freq>tx_freq_max:
         tx_freq=tx_freq_min
+        stx_monitor.delete('1.0',END)
         
         
 
-    window.after(1000, loop1)
+    window.after(timeslot_duration, loop1)
     
 open_com_port()
 loop1()
