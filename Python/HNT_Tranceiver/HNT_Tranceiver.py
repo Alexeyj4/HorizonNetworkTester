@@ -9,14 +9,15 @@ import time
 
 com_port_opened = 0 #com port opened flag
 
+timeslot_duration=3000
+tx_freq_step=2
+
 tx_freq_min=134
 tx_freq=tx_freq_min
-tx_freq_step=5
 tx_freq_max=174
 channel_width=0
 fake_rx_freq=174
 squelch=1
-timeslot_duration=1000
 
 window = Tk()
 window.title(title)
@@ -53,7 +54,7 @@ def write(s):
 window.title(title+" - "+port)
 
 frm_monitor=Frame(window,  bd = 5, relief = RAISED)
-stx_monitor=scrolledtext.ScrolledText(frm_monitor,width = 50,height = 30)
+stx_monitor=scrolledtext.ScrolledText(frm_monitor,width = 50,height = 50)
 lbl_monitor=Label(frm_monitor,text="Монитор. [+DMOSETGROUP:0] - успешная запись")
 lbl_monitor.pack()
 stx_monitor.pack()

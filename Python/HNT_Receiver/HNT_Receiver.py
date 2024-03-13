@@ -9,20 +9,25 @@ from tkinter import Canvas
 
 com_port_opened = 0 #com port opened flag
 
+timeslot_duration=3000
+rx_freq_step=2
+
 rx_freq_min=134
 rx_freq=rx_freq_min
-rx_freq_step=5
 rx_freq_max=174
 channel_width=0
 fake_tx_freq=174
 squelch=0
-timeslot_duration=1000
+
 sync_timeout_divider=10 #для этапа синхронизации ставим мальнький таймаут
 timeout=int(timeslot_duration/2)
-rssi_sync_threshold=70 #когда нет сигнала - примерно 20, когда максимум - примерно 110 
-
-cnvs_width=150 #размер полотна для рисования графиков
-cnvs_heigth=55 #размер полотна для рисования графиков
+rssi_sync_threshold=40 #когда нет сигнала - примерно 20, когда максимум - примерно 110
+prev_x=-1
+prev_y=-1
+x_increment=15 #приращение координаты X на каждый шаг при отрисовке графиков
+y_coefficient=1 #коэффициент пересчёта значения RSSI в координату Y  (Y=RSSI*коэф)
+cnvs_width=400 #размер полотна для рисования графиков
+cnvs_heigth=200 #размер полотна для рисования графиков
 
 mode_dict={'idle':0, 'sync':1, 'freq_set':2, 'get_rssi':3}
 mode_dict_iterator=mode_dict['idle']
@@ -40,10 +45,14 @@ except:
 def start():
     global mode_dict_iterator    
     global timeout
-    cnvs.delete('all')
+    global prev_x
+    global prev_y
+    cnvs.delete('all') #очистка полотна для рисования графика
+    prev_x=-1; #сброс короординаты предыдущий точки графика
+    prev_y=-1; #сброс короординаты предыдущий точки графика
     mode_dict_iterator=mode_dict["sync"]
     timeout=int(timeslot_duration/sync_timeout_divider)
-    stx_monitor.delete('1.0',END)
+    stx_monitor.delete('1.0',END) #очистка журнала
     stx_monitor.insert(INSERT,'Синхронизация..')   
 
 def open_com_port():
@@ -128,6 +137,8 @@ def loop1():
     global mode_dict_iterator
     global sync_timeout_divider
     global rssi_sync_threshold
+    global prev_x
+    global prev_y
 
     if mode_dict_iterator==mode_dict['idle']:
         timeout=int(timeslot_duration/2)
@@ -147,9 +158,15 @@ def loop1():
 
     elif mode_dict_iterator==mode_dict["get_rssi"]:        
         stx_monitor.insert(INSERT,str(rx_freq)+'МГц-')
-        stx_monitor.insert(INSERT,get_rssi())
+        rssi=get_rssi()
+        stx_monitor.insert(INSERT,rssi)
         stx_monitor.insert(INSERT,'\n\r')
-        cnvs.create_line(1,1,20,50)
+        #if prev_x!=-1 and prev_y!=-1:
+        x=int(prev_x+x_increment)
+        y=int(rssi*y_coefficient)
+        cnvs.create_line(prev_x,cnvs_heigth-prev_y,x,cnvs_heigth-y) 
+        prev_x=x
+        prev_y=y
         rx_freq=rx_freq+rx_freq_step
         mode_dict_iterator=mode_dict["freq_set"]
         if rx_freq>rx_freq_max:
